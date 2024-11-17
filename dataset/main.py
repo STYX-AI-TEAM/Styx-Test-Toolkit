@@ -6,7 +6,7 @@ from tqdm import tqdm
 class StyxDatasets:
     dataset_map = {
         # "CALM": ""  # You may want to populate this with more datasets
-        "bold" : "AlexAI/bold",
+        "bold" : "AlexaAI/bold",
     }
     
     columns_map = {
