@@ -1,16 +1,4 @@
-def generalized_evaluation(
-    csv_path, 
-    input_column, 
-    response_column, 
-    context_column=None, 
-    metric=None, 
-    threshold=0.5
-):
-  
-  data = pd.read_csv(csv_path)
-  
+def generalized_evaluation(df, metric=None, threshold=0.5):
   test_cases = []
-  for _, row in data.iterrows():
-    input_text = row[input_column]
-    generated_response = row[response_column]
-    context = row[context_column] if context_column else None
+  for _, row in df.iterrows():
+    test_cases.append((row["model_input"], row["response"], row["Expected Output"] if "Expected Output" in row else row["output"]))

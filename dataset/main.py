@@ -16,6 +16,9 @@ class StyxDatasets:
     def __init__(self, dataset_name, subset_name=None, split='train', checkpoint_dir='checkpoints', rows = None):
         self.dataset_name = dataset_name
         
+        if dataset_name.lower() in self.dataset_map:
+            dataset_name = self.dataset_map[dataset_name]
+            
         # Load the dataset
         if subset_name:
             data = load_dataset(dataset_name, subset_name)
