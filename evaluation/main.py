@@ -8,7 +8,7 @@ import pandas as pd
 def interpret_results(results):
     success = 0
     score = 0
-    model = results[0].evaluation_model
+    model = results[0]["evaluation_model"]
     cost = 0
     for res in results:
       _, cost_m, success_m, score_m = list(res.values())
