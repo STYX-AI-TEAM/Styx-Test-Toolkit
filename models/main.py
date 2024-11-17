@@ -2,8 +2,6 @@ import torch, json, requests
 from transformers import pipeline
 
 class StyxModels:
-  endpoint = None
-  model = None
   model_map = {
     "gpt2" : "openai-community/gpt2"
   }
@@ -21,7 +19,7 @@ class StyxModels:
     
   def generate(self, prompt = None, context = None, max_new_tokens = 100, num_return_sequences = 1):
     if self.model is not None:
-      return self.model(prompt, max_new_tokens = max_new_tokens, num_return_sequences = num_return_sequences)
+      return self.model(prompt, max_new_tokens = max_new_tokens, num_return_sequences = num_return_sequences)[-1]['generated_text']
     body = {
             "messages": [{"role": "user", "content": prompt}] if context is None else context,
             "temperature": 0.5,
