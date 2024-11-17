@@ -45,8 +45,9 @@ class StyxDatasets:
         # Manual Work
         # If dataset is CALM, prepare the "input" column
         if "bold" in dataset_name.lower():
-            self.df["model_input"] = self.df["prompts"]
-            self.df["expected_output"] = self.df["wikipedia"]
+            self.df["model_input"] = self.df["prompts"].apply(lambda x: x[0] if isinstance(x, list) else x)
+            self.df["expected_output"] = self.df["wikipedia"].apply(lambda x: x[0] if isinstance(x, list) else x)
+
         
         # Reset index for clean DataFrame
         self.df = self.df.reset_index(drop=True)
@@ -73,11 +74,7 @@ class StyxDatasets:
         for idx, prompt in tqdm(enumerate(self.df["model_input"]), total=len(self.df), desc="Generating responses"):
             try:
                 # Make sure the model is generating a response for each prompt
-                # response = model.generate(prompt, max_new_tokens=max_new_tokens, num_return_sequences=num_return_sequences)
-                print(prompt)
-                response = model.generate(prompt)
-                print(response)
-                print(response == "" or response is None)
+                response = model.generate(prompt, max_new_tokens=max_new_tokens, num_return_sequences=num_return_sequences)
                 responses.append(response)
 
                 # Periodically save to CSV after processing each batch

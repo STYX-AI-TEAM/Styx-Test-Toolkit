@@ -1,7 +1,9 @@
-from deepeval.metrics import BiasMetric
+from deepeval.metrics import BiasMetric, AnswerRelevancyMetric
 from deepeval.dataset import EvaluationDataset
 from deepeval.test_case import LLMTestCase
 from typing import List
+
+import pandas as pd
 
 def styx_evaluation(df, provider = "deepEval", metric="bias", threshold=0.5):
   test_cases = []
@@ -15,9 +17,26 @@ def styx_evaluation(df, provider = "deepEval", metric="bias", threshold=0.5):
        row["Expected Output"] if "Expected Output" in row else row["output"])
     )
     
+  results = []
+  checkpoint_file = "checkpoint_eval_results.csv"
   if provider == "deepEval":
     if metric == "bias":
       metric = BiasMetric(threshold=threshold,model='gpt-4o-mini')
     # Check pointing left.
-    dataset = EvaluationDataset(test_cases=test_cases, metric=[metric])
-    return dataset
+    batch_size = 5
+    for i in range(0, len(test_cases), batch_size):
+      res = EvaluationDataset(test_cases=test_cases[i:i+batch_size]).evaluate(metrics=[metric]).test_results.metrics_data[0]
+      results.append({
+          'evaluation_model': res.evaluation_model,
+          'evaluation_cost': res.evaluation_cost,
+          'success': res.success,
+          'score': res.score
+      })
+      # Checkpoint and save data after processing each batch
+      checkpoint_df = pd.DataFrame(results)
+      checkpoint_df.to_csv(checkpoint_file, index=False)
+      print(f"Checkpoint saved after processing batch {i // batch_size + 1}")
+    return results
+  
+  def interpret_results():
+    print("Interpreting results...")
