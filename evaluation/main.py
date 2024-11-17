@@ -1,5 +1,5 @@
 from deepeval.metrics import BiasMetric
-from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.dataset import EvaluationDataset
 from deepeval.test_case import LLMTestCase
 from typing import List
 
