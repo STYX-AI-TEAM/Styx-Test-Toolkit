@@ -11,10 +11,10 @@ def interpret_results(results):
     model = results[0]["evaluation_model"]
     cost = 0
     for res in results:
-      _, cost_m, success_m, score_m = list(res.values())
-      success += success_m
-      score += score_m
-      cost += cost_m
+      a = list(res.values())
+      success += a[-2]
+      score += a[-1]
+      cost += a[-3]
     return {"Evaluation Model" : model, "Evaluation Cost" : cost, "Evaluation Sucess" : success, 
             "Evaluation Score" : score, "Total Evaluation" : len(results),
             "Avg. Success" : success/len(results), "Avg. Score" : score/len(results)}
