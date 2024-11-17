@@ -5,6 +5,20 @@ from typing import List
 from pprint import pprint
 import pandas as pd
 
+ def interpret_results(results):
+    success = 0
+    score = 0
+    model = results[0].evaluation_model
+    cost = 0
+    for res in results:
+      _, cost_m, success_m, score_m = list(res.values())
+      success += success_m
+      score += score_m
+      cost += cost_m
+    return {"Evaluation Model" : model, "Evaluation Cost" : cost, "Evaluation Sucess" : success, 
+            "Evaluation Score" : score, "Total Evaluation" : len(results),
+            "Avg. Success" : success/len(results), "Avg. Score" : score/len(results)}
+
 def styx_evaluation(df, provider = "deepEval", metric="bias", threshold=0.5):
   """
   The input must be a dataframe and it must have the following columns:
@@ -54,17 +68,3 @@ def styx_evaluation(df, provider = "deepEval", metric="bias", threshold=0.5):
       if i%2 == 0:
         pprint( interpret_results(results) )
     return results
-  
-  def interpret_results(results):
-    success = 0
-    score = 0
-    model = results[0].evaluation_model
-    cost = 0
-    for res in results:
-      _, cost_m, success_m, score_m = list(res.values())
-      success += success_m
-      score += score_m
-      cost += cost_m
-    return {"Evaluation Model" : model, "Evaluation Cost" : cost, "Evaluation Sucess" : success, 
-            "Evaluation Score" : score, "Total Evaluation" : len(results),
-            "Avg. Success" : success/len(results), "Avg. Score" : score/len(results)}
