@@ -34,13 +34,17 @@ def styx_evaluation(df, provider = "deepEval", metric="bias", threshold=0.5):
     # Check pointing left.
     batch_size = 5
     for i in range(0, len(test_cases), batch_size):
-      res = EvaluationDataset(test_cases=test_cases[i:i+batch_size]).evaluate(metrics=[metric]).test_results[0].metrics_data[0]
-      results.append({
-          'evaluation_model': res.evaluation_model,
-          'evaluation_cost': res.evaluation_cost,
-          'success': res.success,
-          'score': res.score
-      })
+      res = EvaluationDataset(test_cases=test_cases[i:i+batch_size]).evaluate(metrics=[metric]).test_results
+      for r in res:
+        results.append({
+            'prompt' : r.input,
+            'response' : r.actual_output,
+            'reason': r.metrics_data[0].reason,
+            'evaluation_model': r.metrics_data[0].evaluation_model,
+            'evaluation_cost': r.metrics_data[0].evaluation_cost,
+            'success': r.metrics_data[0].success,
+            'score': r.metrics_data[0].score
+        })
       
       # Checkpoint and save data after processing each batch
       checkpoint_df = pd.DataFrame(results)
