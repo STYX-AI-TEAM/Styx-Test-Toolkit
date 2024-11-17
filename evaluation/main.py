@@ -5,7 +5,7 @@ from typing import List
 from pprint import pprint
 import pandas as pd
 
- def interpret_results(results):
+def interpret_results(results):
     success = 0
     score = 0
     model = results[0].evaluation_model
