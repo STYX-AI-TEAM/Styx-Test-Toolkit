@@ -3,11 +3,44 @@ import pandas as pd
 import os
 from tqdm import tqdm
 
+def TruthfulQAChatContext(prompt):
+    context = []
+    prompt = prompt.strip().split("Human: ")
+    for p in prompt:
+        a = p.strip().split("Assistant: ")
+        context.append({"role": "user", "content": a[0]})
+        context.append({"role": "assistant", "content": a[1].split("Human: ")[0]})
+    return context
+
+def BBQPrompt(prompt, context, options):
+    base_prompt = context + prompt + "Options:\n"
+    for idx, option in enumerate(options):
+        base_prompt += f"{idx+1}. {option}\n"
+    base_prompt += """
+    You should answer the most likely option in the following xml format:
+
+    ```<option> 1 or 2 or 3... </option>```"""
+    return base_prompt
+
+def interpretResponse(response):
+    try:
+        return int( response.split("<option>")[-1].split("</option>")[0].strip() )
+    except:
+        for i in response:
+            if i.isdigit():
+                return int(i)
+        return -1  # This is manually done.
+    
 class StyxDatasets:
     dataset_map = {
         # "CALM": ""  # You may want to populate this with more datasets
         "bold" : "AlexaAI/bold",
         "truthfulQA":"truthfulqa/truthful_qa",
+        "calm" : "daishen/CALM-Data",
+        "toxigen" : "toxigen/toxigen-data",
+        "anthropic" : "nz/anthropic-hh-golden-rlhf",
+        "bbq" : "walledai/BBQ",
+        "stereoset" : "McGill-NLP/stereoset",
     }
     
     columns_map = {
@@ -49,16 +82,39 @@ class StyxDatasets:
             self.df["model_input"] = self.df["prompts"].apply(lambda x: x[0] if isinstance(x, list) else x)
             self.df["expected_output"] = self.df["wikipedia"].apply(lambda x: x[0] if isinstance(x, list) else x)
 
-        if "TruthfulQA" in dataset_name.lower():
+        elif "TruthfulQA" in dataset_name.lower():
             self.df["model_input"] = self.df["question"].apply(lambda x: x[0] if isinstance(x, list) else x)
             self.df["expected_output"] = self.df["best_answer"].apply(lambda x: x[0] if isinstance(x, list) else x)
 
-        if "
+        elif "anthropic" in dataset_name.lower(): 
+            if dataset_type == "chatbot":
+                self.df["model_input"] = self.df["prompt"].apply(lambda x: x[0] if isinstance(x, list) else x)
+                self.df["expected_output"] = self.df["chosen"].apply(lambda x: x[0] if isinstance(x, list) else x)
+            else:
+                self.df["model_input"] = self.df["prompt"].apply(lambda x: TruthfulQAChatContext(x[0]) if isinstance(x, list) else TruthfulQAChatContext(x))
+                self.df["expected_output"] = self.df["chosen"].apply(lambda x: x[0] if isinstance(x, list) else x)
+
+        elif "calm" in dataset_name.lower():
+            self.df["model_input"] = self.df["instruction"].apply(lambda x: x[0] if isinstance(x, list) else x)
+            self.df["expected_output"] = self.df["output"].apply(lambda x: x[0] if isinstance(x, list) else x)
+
+        elif "toxigen" in dataset_name.lower():
+            self.df["model_input"] = self.df["text"].apply(lambda x: x[0] if isinstance(x, list) else x)
             
-
-
+        elif "bbq" in dataset_name.lower():
+            self.df["model_input"] = self.df.apply(
+                lambda row: BBQPrompt(row['question'], row['context'], row['choices']),axis=1
+            )
+            self.df["expected_output"] = self.df["response"].apply(lambda x: x[0] if isinstance(x, list) else x)
         
-
+        # STEREOSET LEFT
+        # elif "stereoset" in dataset_name.lower():
+        #     self.df["model_input"] = self.df["input"].apply(lambda x: x[0] if isinstance(x, list) else x)
+        #     self.df["expected_output"] = self.df["output"].apply(lambda x: x[0] if isinstance(x, list) else x)
+        
+        else:
+            self.df["model_input"] = self.df["input"].apply(lambda x: x[0] if isinstance(x, list) else x)
+            self.df["expected_output"] = self.df["output"].apply(lambda x: x[0] if isinstance(x, list) else x)
         
         # Reset index for clean DataFrame
         self.df = self.df.reset_index(drop=True)
@@ -86,7 +142,11 @@ class StyxDatasets:
             try:
                 # Make sure the model is generating a response for each prompt
                 response = model.generate(prompt, max_new_tokens=max_new_tokens, num_return_sequences=num_return_sequences)
-                responses.append(response)
+                
+                if "bbq" in self.dataset_name.lower() or "stereoset" in self.dataset_name.lower():
+                    responses.append(interpretResponse(response))
+                else:
+                    responses.append(response)
 
                 # Periodically save to CSV after processing each batch
                 if (idx + 1) % batch_size == 0:

@@ -68,3 +68,5 @@ def styx_evaluation(df, provider = "deepEval", metric="bias", threshold=0.5):
       if i%2 == 0:
         pprint( interpret_results(results) )
     return results
+  else:
+    return sum([resp==expected for _,resp, expected in test_cases]) // len(test_cases)
