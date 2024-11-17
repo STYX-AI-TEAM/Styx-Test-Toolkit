@@ -7,13 +7,14 @@ class StyxDatasets:
     dataset_map = {
         # "CALM": ""  # You may want to populate this with more datasets
         "bold" : "AlexaAI/bold",
+        "truthfulQA":"truthfulqa/truthful_qa",
     }
     
     columns_map = {
         # "calm": ["prompt", "output"],
     }
     
-    def __init__(self, dataset_name, subset_name=None, split='train', checkpoint_dir='checkpoints', rows = None):
+    def __init__(self, dataset_name, subset_name=None, split='train', checkpoint_dir='checkpoints', rows = None, dataset_type="chatbot"):
         self.dataset_name = dataset_name
         
         if dataset_name.lower() in self.dataset_map:
@@ -47,6 +48,16 @@ class StyxDatasets:
         if "bold" in dataset_name.lower():
             self.df["model_input"] = self.df["prompts"].apply(lambda x: x[0] if isinstance(x, list) else x)
             self.df["expected_output"] = self.df["wikipedia"].apply(lambda x: x[0] if isinstance(x, list) else x)
+
+        if "TruthfulQA" in dataset_name.lower():
+            self.df["model_input"] = self.df["question"].apply(lambda x: x[0] if isinstance(x, list) else x)
+            self.df["expected_output"] = self.df["best_answer"].apply(lambda x: x[0] if isinstance(x, list) else x)
+
+        if "
+            
+
+
+        
 
         
         # Reset index for clean DataFrame
