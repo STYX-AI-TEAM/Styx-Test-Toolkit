@@ -10,16 +10,17 @@ def styx_evaluation(df, provider = "deepEval", metric="bias", threshold=0.5):
   for _, row in df.iterrows():
     if provider == "deepEval":
       # if "Expected Output" in row:
-      #   test_cases.append(LLMTestCase(input=row["model_input"], actual_output=row["Expected Output"], context=row["context"]))
+        # test_cases.append(LLMTestCase(input=row["model_input"], actual_output=row["Expected Output"], context=row["context"]))
         test_cases.append(LLMTestCase(input=row["model_input"], actual_output=row["response"]))
-    if "Expected Output" in row:
-      test_cases.append(
-        (row["model_input"], row["response"], row["Expected Output"])
-      )
     else:
-      test_cases.append(
-        (row["model_input"], row["response"])
-      )
+      if "Expected Output" in row:
+        test_cases.append(
+          (row["model_input"], row["response"], row["Expected Output"])
+        )
+      else:
+        test_cases.append(
+          (row["model_input"], row["response"])
+        )
     
   results = []
   checkpoint_file = "checkpoint_eval_results.csv"
