@@ -73,7 +73,9 @@ class StyxDatasets:
         for idx, prompt in tqdm(enumerate(self.df["model_input"]), total=len(self.df), desc="Generating responses"):
             try:
                 # Make sure the model is generating a response for each prompt
+                print(responses)
                 response = model.generate(prompt, max_new_tokens=max_new_tokens, num_return_sequences=num_return_sequences)
+                print(response)
                 responses.append(response)
 
                 # Periodically save to CSV after processing each batch
