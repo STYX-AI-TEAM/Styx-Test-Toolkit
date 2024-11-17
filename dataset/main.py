@@ -55,7 +55,7 @@ class StyxDatasets:
         self.checkpoint_dir = checkpoint_dir
         os.makedirs(self.checkpoint_dir, exist_ok=True)
 
-    def generate_responses(self, model, max_new_tokens=100, num_return_sequences=1, batch_size=3, **kwargs):
+    def generate_responses(self, model, max_new_tokens=100, num_return_sequences=1, batch_size=3):
         responses = []
         
         # Try to resume from last checkpoint if it exists
@@ -73,8 +73,8 @@ class StyxDatasets:
         for idx, prompt in tqdm(enumerate(self.df["model_input"]), total=len(self.df), desc="Generating responses"):
             try:
                 # Make sure the model is generating a response for each prompt
-                response = model.generate(prompt, max_new_tokens=max_new_tokens, num_return_sequences=num_return_sequences, **kwargs)
-                responses.append(response[0])  # Assuming the model returns a list and we take the first one
+                response = model.generate(prompt, max_new_tokens=max_new_tokens, num_return_sequences=num_return_sequences)
+                responses.append(response)
 
                 # Periodically save to CSV after processing each batch
                 if (idx + 1) % batch_size == 0:
