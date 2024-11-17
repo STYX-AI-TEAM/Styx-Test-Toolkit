@@ -6,6 +6,10 @@ from pprint import pprint
 import pandas as pd
 
 def styx_evaluation(df, provider = "deepEval", metric="bias", threshold=0.5):
+  """
+  The input must be a dataframe and it must have the following columns:
+  model_input, response, Expected Output
+  """
   test_cases = []
   for _, row in df.iterrows():
     if provider == "deepEval":
@@ -30,19 +34,21 @@ def styx_evaluation(df, provider = "deepEval", metric="bias", threshold=0.5):
     # Check pointing left.
     batch_size = 5
     for i in range(0, len(test_cases), batch_size):
-      res = EvaluationDataset(test_cases=test_cases[i:i+batch_size]).evaluate(metrics=[metric]).test_results.metrics_data[0]
+      res = EvaluationDataset(test_cases=test_cases[i:i+batch_size]).evaluate(metrics=[metric]).test_results[0].metrics_data[0]
       results.append({
           'evaluation_model': res.evaluation_model,
           'evaluation_cost': res.evaluation_cost,
           'success': res.success,
           'score': res.score
       })
-      if i%2 == 0:
-        pprint( interpret_results(results) )
+      
       # Checkpoint and save data after processing each batch
       checkpoint_df = pd.DataFrame(results)
       checkpoint_df.to_csv(checkpoint_file, index=False)
       print(f"Checkpoint saved after processing batch {i // batch_size + 1}")
+      
+      if i%2 == 0:
+        pprint( interpret_results(results) )
     return results
   
   def interpret_results(results):
