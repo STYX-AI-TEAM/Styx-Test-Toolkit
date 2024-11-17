@@ -2,7 +2,7 @@ from deepeval.metrics import BiasMetric, AnswerRelevancyMetric
 from deepeval.dataset import EvaluationDataset
 from deepeval.test_case import LLMTestCase
 from typing import List
-
+from pprint import pprint
 import pandas as pd
 
 def styx_evaluation(df, provider = "deepEval", metric="bias", threshold=0.5):
@@ -12,10 +12,14 @@ def styx_evaluation(df, provider = "deepEval", metric="bias", threshold=0.5):
       # if "Expected Output" in row:
       #   test_cases.append(LLMTestCase(input=row["model_input"], actual_output=row["Expected Output"], context=row["context"]))
         test_cases.append(LLMTestCase(input=row["model_input"], actual_output=row["response"]))
-    test_cases.append(
-      (row["model_input"], row["response"], 
-       row["Expected Output"] if "Expected Output" in row else row["output"])
-    )
+    if "Expected Output" in row:
+      test_cases.append(
+        (row["model_input"], row["response"], row["Expected Output"])
+      )
+    else:
+      test_cases.append(
+        (row["model_input"], row["response"])
+      )
     
   results = []
   checkpoint_file = "checkpoint_eval_results.csv"
@@ -32,11 +36,24 @@ def styx_evaluation(df, provider = "deepEval", metric="bias", threshold=0.5):
           'success': res.success,
           'score': res.score
       })
+      if i%2 == 0:
+        pprint( interpret_results(results) )
       # Checkpoint and save data after processing each batch
       checkpoint_df = pd.DataFrame(results)
       checkpoint_df.to_csv(checkpoint_file, index=False)
       print(f"Checkpoint saved after processing batch {i // batch_size + 1}")
     return results
   
-  def interpret_results():
-    print("Interpreting results...")
+  def interpret_results(results):
+    success = 0
+    score = 0
+    model = results[0].evaluation_model
+    cost = 0
+    for res in results:
+      _, cost_m, success_m, score_m = list(res.values())
+      success += success_m
+      score += score_m
+      cost += cost_m
+    return {"Evaluation Model" : model, "Evaluation Cost" : cost, "Evaluation Sucess" : success, 
+            "Evaluation Score" : score, "Total Evaluation" : len(results),
+            "Avg. Success" : success/len(results), "Avg. Score" : score/len(results)}
