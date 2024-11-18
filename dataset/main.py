@@ -47,7 +47,7 @@ class StyxDatasets:
         # "calm": ["prompt", "output"],
     }
     
-    def __init__(self, dataset_name, subset_name=None, split='train', checkpoint_dir='checkpoints', rows = None, dataset_type="chatbot"):
+    def __init__(self, dataset_name, subset_name=None, split='', checkpoint_dir='checkpoints', rows = None, dataset_type="chatbot"):
         self.dataset_name = dataset_name
         
         if dataset_name.lower() in self.dataset_map:
