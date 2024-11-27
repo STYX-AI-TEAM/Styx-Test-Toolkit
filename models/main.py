@@ -9,9 +9,9 @@ class StyxModels:
   }
   model = None
   def __init__(self, model = None, endpoint = None, api_key = None):
-    if model is not None:
+    if endpoint is None and (model is not None):
       device = 0 if torch.cuda.is_available() else -1
-      if endpoint is None and model in self.model_map:
+      if model in self.model_map:
         model = self.model_map[model]
       self.model = pipeline("text-generation", model=model,device=device)
     self.url = endpoint
