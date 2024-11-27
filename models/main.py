@@ -6,12 +6,13 @@ class StyxModels:
     "gpt 2" : "openai-community/gpt2",
     "llama 3.2" : "meta-llama/Llama-3.2-1B",
     "Gemma 2" : "google/gemma-2-2b-it",
+    "Gemma" : "google/gemma-2-2b-it"
   }
   model = None
   def __init__(self, model = None, endpoint = None, api_key = None):
     if endpoint is None and (model is not None):
       device = 0 if torch.cuda.is_available() else -1
-      if model in self.model_map:
+      if model.lower() in self.model_map:
         model = self.model_map[model]
       self.model = pipeline("text-generation", model=model,device=device)
     self.url = endpoint
@@ -22,7 +23,7 @@ class StyxModels:
     
   def generate(self, prompt = None, context = None, max_new_tokens = 100, num_return_sequences = 1):
     if self.model is not None:
-      return self.model(prompt, max_new_tokens = max_new_tokens, num_return_sequences = num_return_sequences)[-1]['generated_text']
+      return self.model(prompt, max_new_tokens = max_new_tokens, num_return_sequences = num_return_sequences)[0]['generated_text']
     body = {
             "messages": [{"role": "user", "content": prompt}] if context is None else context,
             "temperature": 0.5,
@@ -32,7 +33,7 @@ class StyxModels:
         }
     try:
       res = requests.post(url=self.url, headers=self.headers, json=body).json()
-      return res['choices'][-1]['message']['content']
+      return res['choices'][0]['message']['content']
     except Exception as e:
       print(e)
       print("Error Response: ", res)
