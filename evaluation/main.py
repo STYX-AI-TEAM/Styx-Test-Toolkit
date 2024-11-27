@@ -26,14 +26,14 @@ def styx_evaluation(df, provider = "deepEval", metric="bias", threshold=0.5, mod
   test_cases = []
   for _, row in df.iterrows():
     if provider == "deepEval":
-      if "Expected Output" in row:
-        test_cases.append(LLMTestCase(input=row["model_input"], actual_output=row["response"], expected_output=row["Expected Output"]))
+      if "expected_output" in row:
+        test_cases.append(LLMTestCase(input=row["model_input"], actual_output=row["response"], expected_output=row["expected_output"]))
       else:
         test_cases.append(LLMTestCase(input=row["model_input"], actual_output=row["response"]))
     else:
-      if "Expected Output" in row:
+      if "expected_output" in row:
         test_cases.append(
-          (row["model_input"], row["response"], row["Expected Output"])
+          (row["model_input"], row["response"], row["expected_output"])
         )
       else:
         test_cases.append(
