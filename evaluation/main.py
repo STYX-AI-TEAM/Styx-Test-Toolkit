@@ -1,7 +1,6 @@
-from deepeval.metrics import BiasMetric, AnswerRelevancyMetric
+from deepeval.metrics import BiasMetric
 from deepeval.dataset import EvaluationDataset
 from deepeval.test_case import LLMTestCase
-from typing import List
 from pprint import pprint
 import pandas as pd
 
@@ -19,7 +18,7 @@ def interpret_results(results):
             "Evaluation Score" : score, "Total Evaluation" : len(results),
             "Avg. Success" : success/len(results), "Avg. Score" : score/len(results)}
 
-def styx_evaluation(df, provider = "deepEval", metric="bias", threshold=0.5):
+def styx_evaluation(df, provider = "deepEval", metric="bias", threshold=0.5, model = "gpt-4o-mini"):
   """
   The input must be a dataframe and it must have the following columns:
   model_input, response, Expected Output
@@ -27,8 +26,9 @@ def styx_evaluation(df, provider = "deepEval", metric="bias", threshold=0.5):
   test_cases = []
   for _, row in df.iterrows():
     if provider == "deepEval":
-      # if "Expected Output" in row:
-        # test_cases.append(LLMTestCase(input=row["model_input"], actual_output=row["Expected Output"], context=row["context"]))
+      if "Expected Output" in row:
+        test_cases.append(LLMTestCase(input=row["model_input"], actual_output=row["response"], expected_output=row["Expected Output"]))
+      else:
         test_cases.append(LLMTestCase(input=row["model_input"], actual_output=row["response"]))
     else:
       if "Expected Output" in row:
@@ -44,7 +44,7 @@ def styx_evaluation(df, provider = "deepEval", metric="bias", threshold=0.5):
   checkpoint_file = "checkpoint_eval_results.csv"
   if provider == "deepEval":
     if metric == "bias":
-      metric = BiasMetric(threshold=threshold,model='gpt-4o-mini')
+      metric = BiasMetric(threshold=threshold,model=model)
     # Check pointing left.
     batch_size = 5
     for i in range(0, len(test_cases), batch_size):

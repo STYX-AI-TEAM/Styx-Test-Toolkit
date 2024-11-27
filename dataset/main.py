@@ -44,7 +44,7 @@ class StyxDatasets:
     }
     
     columns_map = {
-        # "calm": ["prompt", "output"],
+        "calm": ["instruction", "output"],
     }
     
     def __init__(self, dataset_name, subset_name=None, split='train', checkpoint_dir='checkpoints', rows = None, dataset_type="chatbot"):
@@ -53,27 +53,14 @@ class StyxDatasets:
         if dataset_name.lower() in self.dataset_map:
             dataset_name = self.dataset_map[dataset_name]
             
-        # Load the dataset
-        if subset_name:
-            data = load_dataset(dataset_name, subset_name)
-        else:
-            data = load_dataset(dataset_name)
-        
-        # Load the split into a DataFrame
-        if rows is not None:
-            self.df = pd.DataFrame(data[split][:rows])
-        else:
-            self.df = pd.DataFrame(data[split])
+        data = load_dataset(dataset_name, subset_name) if subset_name else load_dataset(dataset_name)
+        self.df = pd.DataFrame(data[split][:rows]) if rows is not None else pd.DataFrame(data[split])
 
-        # Identify the columns for this dataset
-        # If columns are found, filter the DataFrame to those columns
-        cols = None
-        for k, v in self.columns_map.items():
-            if dataset_name.lower() in k.lower():
-                cols = v
+        # Filter the DataFrame to keep only required columns
+        for name, cols in self.columns_map.items():
+            if name.lower() in dataset_name.lower():
+                self.df = self.df[cols]
                 break
-        if cols:
-            self.df = self.df[cols]
 
         ###################################
         # Manual Work
@@ -97,6 +84,7 @@ class StyxDatasets:
         elif "calm" in dataset_name.lower():
             self.df["model_input"] = self.df["instruction"].apply(lambda x: x[0] if isinstance(x, list) else x)
             self.df["expected_output"] = self.df["output"].apply(lambda x: x[0] if isinstance(x, list) else x)
+            self.df.drop(columns=["instruction", "output"], inplace=True)
 
         elif "toxigen" in dataset_name.lower():
             self.df["model_input"] = self.df["text"].apply(lambda x: x[0] if isinstance(x, list) else x)
@@ -125,6 +113,8 @@ class StyxDatasets:
 
     def generate_responses(self, model, max_new_tokens=100, num_return_sequences=1, batch_size=3):
         responses = []
+        start_idx = 0
+        prompts_df = self.df
         
         # Try to resume from last checkpoint if it exists
         checkpoint_file = os.path.join(self.checkpoint_dir, 'responses_checkpoint.csv')
@@ -133,17 +123,17 @@ class StyxDatasets:
             checkpoint_df = pd.read_csv(checkpoint_file)
             start_idx = len(checkpoint_df)
             responses = checkpoint_df['response'].tolist()
-            self.df = self.df.iloc[start_idx:].reset_index(drop=True)
-        else:
-            start_idx = 0
+            prompts_df = self.df.iloc[start_idx:].reset_index(drop=True)
         
         # Iterate over each prompt to generate a response
-        for idx, prompt in tqdm(enumerate(self.df["model_input"]), total=len(self.df), desc="Generating responses"):
+        for idx, prompt in tqdm(enumerate(prompts_df["model_input"]), total=len(prompts_df), desc="Generating responses"):
             try:
                 # Make sure the model is generating a response for each prompt
                 response = model.generate(prompt, max_new_tokens=max_new_tokens, num_return_sequences=num_return_sequences)
                 
-                if "bbq" in self.dataset_name.lower() or "stereoset" in self.dataset_name.lower():
+                if (response is not None and
+                    ("bbq" in self.dataset_name.lower() or "stereoset" in self.dataset_name.lower())
+                    ):
                     responses.append(interpretResponse(response))
                 else:
                     responses.append(response)
@@ -156,13 +146,13 @@ class StyxDatasets:
 
             except Exception as e:
                 print(f"Error generating response for prompt {idx + 1}: {e}")
-                break  # Stop and resume from checkpoint in case of an error
+                responses.append(None)
         
         # Add all generated responses to the DataFrame
-        self.df['response'] = responses
+        prompts_df['response'] = responses
 
         # Final save after all responses are generated
-        self.df.to_csv(checkpoint_file, index=False)
+        prompts_df.to_csv(checkpoint_file, index=False)
         print(f"Final checkpoint saved at {checkpoint_file}")
-        
+        self.df = prompts_df  
         return self.df  # Return the DataFrame with the responses

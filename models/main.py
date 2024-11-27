@@ -11,7 +11,7 @@ class StyxModels:
   def __init__(self, model = None, endpoint = None, api_key = None):
     if model is not None:
       device = 0 if torch.cuda.is_available() else -1
-      if model in self.model_map:
+      if endpoint is None and model in self.model_map:
         model = self.model_map[model]
       self.model = pipeline("text-generation", model=model,device=device)
     self.url = endpoint
@@ -30,6 +30,11 @@ class StyxModels:
             "top_p": 0.7,
             "stream": False
         }
-    res = json.loads(requests.post(url=self.url, headers=self.headers, json=body).text)
-    return res['choices'][-1]['message']['content']
+    try:
+      res = requests.post(url=self.url, headers=self.headers, json=body).json()
+      return res['choices'][-1]['message']['content']
+    except Exception as e:
+      print(e)
+      print("Error Response: ", res)
+      return None
 
