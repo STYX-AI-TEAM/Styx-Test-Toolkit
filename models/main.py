@@ -5,8 +5,8 @@ class StyxModels:
   model_map = {
     "gpt 2" : "openai-community/gpt2",
     "llama 3.2" : "meta-llama/Llama-3.2-1B",
-    "Gemma 2" : "google/gemma-2-2b-it",
-    "Gemma" : "google/gemma-2-2b-it"
+    "gemma 2" : "google/gemma-2-2b-it",
+    "gemma" : "google/gemma-2-2b-it"
   }
   model = None
   def __init__(self, model = None, endpoint = None, api_key = None):
