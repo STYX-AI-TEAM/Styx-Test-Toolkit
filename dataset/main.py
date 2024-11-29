@@ -47,7 +47,9 @@ class StyxDatasets:
         "calm": ["instruction", "output"],
     }
     
-    def __init__(self, dataset_name, subset_name=None, split='train', checkpoint_dir='checkpoints', rows = None, dataset_type="chatbot"):
+    def __init__(self, dataset_name=None, subset_name=None, split='train', checkpoint_dir='checkpoints', rows = None, dataset_type="chatbot"):
+        if dataset_name is None:  # To access the available datasets
+            return 
         self.dataset_name = dataset_name
         
         if dataset_name.lower() in self.dataset_map:
@@ -93,7 +95,7 @@ class StyxDatasets:
             self.df["model_input"] = self.df.apply(
                 lambda row: BBQPrompt(row['question'], row['context'], row['choices']),axis=1
             )
-            self.df["expected_output"] = self.df["response"].apply(lambda x: x[0] if isinstance(x, list) else x)
+            self.df["expected_output"] = self.df["answer"].apply(lambda x: x[0] if isinstance(x, list) else x)
         
         # STEREOSET LEFT
         # elif "stereoset" in dataset_name.lower():
@@ -111,14 +113,14 @@ class StyxDatasets:
         self.checkpoint_dir = checkpoint_dir
         os.makedirs(self.checkpoint_dir, exist_ok=True)
 
-    def generate_responses(self, model, max_new_tokens=100, num_return_sequences=1, batch_size=3):
+    def generate_responses(self, model, max_new_tokens=100, num_return_sequences=1, batch_size=3, checkpointing = True, filename = None):
         responses = []
         start_idx = 0
         prompts_df = self.df
         
         # Try to resume from last checkpoint if it exists
-        checkpoint_file = os.path.join(self.checkpoint_dir, 'responses_checkpoint.csv')
-        if os.path.exists(checkpoint_file):
+        checkpoint_file = os.path.join(self.checkpoint_dir, filename if filename is not None else 'responses_checkpoint.csv')
+        if os.path.exists(checkpoint_file) and checkpointing:
             print(f"Resuming from last checkpoint: {checkpoint_file}")
             checkpoint_df = pd.read_csv(checkpoint_file)
             start_idx = len(checkpoint_df)
@@ -139,7 +141,7 @@ class StyxDatasets:
                     responses.append(response)
 
                 # Periodically save to CSV after processing each batch
-                if (idx + 1) % batch_size == 0:
+                if (idx + 1) % batch_size == 0 and checkpointing:
                     self.df.loc[:idx, 'response'] = responses[:idx+1]
                     self.df.to_csv(checkpoint_file, index=False)
                     print(f"Checkpoint saved at batch {idx + 1}")

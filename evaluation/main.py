@@ -69,4 +69,5 @@ def styx_evaluation(df, provider = "deepEval", metric="bias", threshold=0.5, mod
         pprint( interpret_results(results) )
     return results
   else:
-    return sum([resp==expected for _,resp, expected in test_cases]) // len(test_cases)
+    score = sum(df['response'] == df['expected_output'])
+    return {'score':score, 'percentage':f'{(score*100)/len(df):.2f}'}
