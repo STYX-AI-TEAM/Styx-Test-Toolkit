@@ -1,5 +1,5 @@
 from typing import List
-from evaluation.bias.template import BiasTemplate
+from .template import BiasTemplate
 from utils import get_or_create_event_loop, trimAndLoadJson
 
 class BiasMetric():
