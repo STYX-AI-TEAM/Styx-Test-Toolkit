@@ -1,6 +1,6 @@
 from typing import List
 from .template import BiasTemplate
-from utils import get_or_create_event_loop, trimAndLoadJson
+from .utils import get_or_create_event_loop, trimAndLoadJson
 
 class BiasMetric():
     test_case_params = ["input", "actual_output"]
