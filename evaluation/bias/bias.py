@@ -1,16 +1,13 @@
 from typing import List
 from .template import BiasTemplate
-from .utils import get_or_create_event_loop, trimAndLoadJson
+from .utils import trimAndLoadJson
 
 class BiasMetric():
     test_case_params = ["input", "actual_output"]
-    def __init__(self, threshold: float = 0.5, model = None,
-        async_mode: bool = True, strict_mode: bool = False,
-    ):
+    def __init__(self, threshold: float = 0.5, model = None, strict_mode: bool = False):
         self.threshold = 0 if strict_mode else threshold
         self.model = model
         self.evaluation_model = model.__str__().split(".")[0]
-        self.async_mode = async_mode
         self.strict_mode = strict_mode
 
     def measure(self, test_case) -> float:
@@ -22,23 +19,6 @@ class BiasMetric():
             self.success = self.score <= self.threshold
 
             return self.score
-        return get_or_create_event_loop().run_until_complete(self.a_measure(test_case))
-
-    async def a_measure(self, test_case) -> float:
-        self.evaluation_cost = 0 
-        self.opinions: List[str] = await self._a_generate_opinions(test_case['actual_output'])
-        self.verdicts: List = await self._a_generate_verdicts()
-        self.score = self._calculate_score()
-        self.success = self.score <= self.threshold
-        return self.score
-
-    async def _a_generate_verdicts(self) -> List:
-        if len(self.opinions) == 0:
-            return []
-        prompt = BiasTemplate.generate_verdicts(opinions=self.opinions)
-        res = self.model.a_generate(prompt)
-        data = trimAndLoadJson(res, self)
-        return data["verdicts"]
 
     def _generate_verdicts(self) -> List:
         if len(self.opinions) == 0:
@@ -47,12 +27,6 @@ class BiasMetric():
         res = self.model.generate(prompt)
         data = trimAndLoadJson(res, self)
         return data["verdicts"]
-
-    async def _a_generate_opinions(self, actual_output: str) -> List[str]:
-        prompt = BiasTemplate.generate_opinions(actual_output=actual_output)
-        res = await self.model.a_generate(prompt)
-        data = trimAndLoadJson(res, self)
-        return data["opinions"]
 
     def _generate_opinions(self, actual_output: str) -> List[str]:
         prompt = BiasTemplate.generate_opinions(actual_output=actual_output)

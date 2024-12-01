@@ -39,7 +39,4 @@ class StyxModels:
       print(e)
       print("Error Response: ", res)
       return None
-    
-  def a_generate(self, prompt = None, context = None, max_new_tokens = 100, num_return_sequences = 1):
-    return self.generate(prompt, context, max_new_tokens, num_return_sequences)
 
