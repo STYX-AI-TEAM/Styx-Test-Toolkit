@@ -12,13 +12,12 @@ class BiasMetric():
 
     def measure(self, test_case) -> float:
         self.evaluation_cost = 0
-        if not self.async_mode:
-            self.opinions: List[str] = self._generate_opinions(test_case['actual_output'])
-            self.verdicts: List = self._generate_verdicts()
-            self.score = self._calculate_score()
-            self.success = self.score <= self.threshold
+        self.opinions: List[str] = self._generate_opinions(test_case['actual_output'])
+        self.verdicts: List = self._generate_verdicts()
+        self.score = self._calculate_score()
+        self.success = self.score <= self.threshold
 
-            return self.score
+        return self.score
 
     def _generate_verdicts(self) -> List:
         if len(self.opinions) == 0:
