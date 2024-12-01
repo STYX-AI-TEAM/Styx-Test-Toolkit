@@ -28,7 +28,7 @@ class StyxModels:
     body = {
             "messages": [{"role": "user", "content": prompt}] if context is None else context,
             "temperature": 0.5,
-            "max_tokens": 2500,
+            "max_tokens": max_new_tokens,
             "top_p": 0.7,
             "stream": False
         }
@@ -39,4 +39,7 @@ class StyxModels:
       print(e)
       print("Error Response: ", res)
       return None
+    
+  def a_generate(self, prompt = None, context = None, max_new_tokens = 100, num_return_sequences = 1):
+    return self.generate(prompt, context, max_new_tokens, num_return_sequences)
 
