@@ -18,6 +18,7 @@ class StyxModels:
     self.url = endpoint
     self.headers = {
         "Authorization": f"Bearer {api_key}" if api_key else "",
+        "api-key": api_key if api_key else "",
         "Content-Type": "application/json",
     }
     
