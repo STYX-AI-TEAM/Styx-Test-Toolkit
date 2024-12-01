@@ -142,7 +142,7 @@ class StyxDatasets:
 
                 # Periodically save to CSV after processing each batch
                 if (idx + 1) % batch_size == 0 and checkpointing:
-                    self.df.loc[:idx, 'response'] = responses[:idx+1]
+                    self.df.loc[:idx, 'actual_output'] = responses[:idx+1]
                     self.df.to_csv(checkpoint_file, index=False)
                     print(f"Checkpoint saved at batch {idx + 1}")
 
@@ -151,7 +151,7 @@ class StyxDatasets:
                 responses.append(None)
         
         # Add all generated responses to the DataFrame
-        prompts_df['response'] = responses
+        prompts_df['actual_output'] = responses
 
         # Final save after all responses are generated
         prompts_df.to_csv(checkpoint_file, index=False)

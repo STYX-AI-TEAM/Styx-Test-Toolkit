@@ -22,7 +22,7 @@ def styx_evaluation(df, provider = "deepEval", metric="bias", threshold=0.5, mod
   """
   # Perpare the test cases
   test_cases = []
-  fields = ["model_input", "response"]
+  fields = ["model_input", "actual_output"]
   if "expected_output" in df.columns:
     fields.append("expected_output") 
   test_cases = df.apply(lambda row: {field: row[field] for field in fields}, axis=1).tolist()
@@ -46,5 +46,5 @@ def styx_evaluation(df, provider = "deepEval", metric="bias", threshold=0.5, mod
       pd.DataFrame(results).to_csv(checkpoint_file, index=False)
     return results
   else:
-    score = sum(df['response'] == df['expected_output'])
+    score = sum(df['actual_output'] == df['expected_output'])
     return {'score':score, 'percentage':f'{(score*100)/len(df):.2f}'}
