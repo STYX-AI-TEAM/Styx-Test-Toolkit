@@ -38,6 +38,7 @@ def styx_evaluation(df, provider = "deepEval", metric="bias", threshold=0.5, mod
           'prompt' : test_case['model_input'],
           'response' : test_case['actual_output'],
           'evaluation_model': metric.evaluation_model,
+          'verdicts': str(metric.verdicts),
           'success': metric.success,
           'score': metric.score
       })
