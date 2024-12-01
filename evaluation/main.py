@@ -44,7 +44,7 @@ def styx_evaluation(df, provider = "deepEval", metric="bias", threshold=0.5, mod
       
       # Checkpoint and save data after processing each batch
       pd.DataFrame(results).to_csv(checkpoint_file, index=False)
-    return results
+    return pd.DataFrame(results)
   else:
     score = sum(df['actual_output'] == df['expected_output'])
-    return {'score':score, 'percentage':f'{(score*100)/len(df):.2f}'}
+    return pd.DataFrame({'score':score, 'percentage':f'{(score*100)/len(df):.2f}'})
