@@ -33,14 +33,14 @@ def styx_evaluation(df, provider = "deepEval", metric="bias", threshold=0.5, mod
     if metric == "bias":
       metric = BiasMetric(threshold=threshold,model=model)
     for test_case in test_cases:
-      for r in metric.measure(test_case):
-        results.append({
-            'prompt' : test_case['model_input'],
-            'response' : test_case['actual_output'],
-            'evaluation_model': r.evaluation_model,
-            'success': r.success,
-            'score': r.score
-        })
+      metric.measure(test_case)
+      results.append({
+          'prompt' : test_case['model_input'],
+          'response' : test_case['actual_output'],
+          'evaluation_model': metric.evaluation_model,
+          'success': metric.success,
+          'score': metric.score
+      })
       
       # Checkpoint and save data after processing each batch
       pd.DataFrame(results).to_csv(checkpoint_file, index=False)
