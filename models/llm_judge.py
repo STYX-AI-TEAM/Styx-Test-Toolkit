@@ -2,12 +2,11 @@ import json, requests
 
 from pydantic import BaseModel
 
-from deepeval.models import DeepEvalBaseLLM
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
 import os
 
-class CustomJudge(DeepEvalBaseLLM):
+class CustomJudge():
     model_name_map = {
         "llama" : "llama 3.1 70B",
         "gpt" : "gpt-4o-mini",

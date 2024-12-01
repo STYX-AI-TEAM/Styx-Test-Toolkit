@@ -1,6 +1,4 @@
-from deepeval.metrics import BiasMetric
-from deepeval.dataset import EvaluationDataset
-from deepeval.test_case import LLMTestCase
+from bias.bias import BiasMetric
 from pprint import pprint
 import pandas as pd
 
@@ -23,50 +21,30 @@ def styx_evaluation(df, provider = "deepEval", metric="bias", threshold=0.5, mod
   The input must be a dataframe and it must have the following columns:
   model_input, response, Expected Output
   """
+  # Perpare the test cases
   test_cases = []
-  for _, row in df.iterrows():
-    if provider == "deepEval":
-      if "expected_output" in row:
-        test_cases.append(LLMTestCase(input=row["model_input"], actual_output=row["response"], expected_output=row["expected_output"]))
-      else:
-        test_cases.append(LLMTestCase(input=row["model_input"], actual_output=row["response"]))
-    else:
-      if "expected_output" in row:
-        test_cases.append(
-          (row["model_input"], row["response"], row["expected_output"])
-        )
-      else:
-        test_cases.append(
-          (row["model_input"], row["response"])
-        )
-    
+  fields = ["model_input", "response"]
+  if "expected_output" in df.columns:
+    fields.append("expected_output") 
+  test_cases = df.apply(lambda row: {field: row[field] for field in fields}, axis=1).tolist()
+  
   results = []
   checkpoint_file = "checkpoint_eval_results.csv"
   if provider == "deepEval":
     if metric == "bias":
       metric = BiasMetric(threshold=threshold,model=model)
-    # Check pointing left.
-    batch_size = 5
-    for i in range(0, len(test_cases), batch_size):
-      res = EvaluationDataset(test_cases=test_cases[i:i+batch_size]).evaluate(metrics=[metric]).test_results
-      for r in res:
+    for test_case in test_cases:
+      for r in metric.measure(test_case):
         results.append({
-            'prompt' : r.input,
-            'response' : r.actual_output,
-            'reason': r.metrics_data[0].reason,
-            'evaluation_model': r.metrics_data[0].evaluation_model,
-            'evaluation_cost': r.metrics_data[0].evaluation_cost,
-            'success': r.metrics_data[0].success,
-            'score': r.metrics_data[0].score
+            'prompt' : test_case['model_input'],
+            'response' : test_case['actual_output'],
+            'evaluation_model': r.evaluation_model,
+            'success': r.success,
+            'score': r.score
         })
       
       # Checkpoint and save data after processing each batch
-      checkpoint_df = pd.DataFrame(results)
-      checkpoint_df.to_csv(checkpoint_file, index=False)
-      print(f"Checkpoint saved after processing batch {i // batch_size + 1}")
-      
-      if i%2 == 0:
-        pprint( interpret_results(results) )
+      pd.DataFrame(results).to_csv(checkpoint_file, index=False)
     return results
   else:
     score = sum(df['response'] == df['expected_output'])
