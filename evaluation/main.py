@@ -1,4 +1,4 @@
-from bias.bias import BiasMetric
+from evaluation.bias.bias import BiasMetric
 from pprint import pprint
 import pandas as pd
 
