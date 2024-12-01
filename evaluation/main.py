@@ -1,5 +1,4 @@
-from evaluation.bias.bias import BiasMetric
-from pprint import pprint
+from .bias.bias import BiasMetric
 import pandas as pd
 
 def interpret_results(results):
